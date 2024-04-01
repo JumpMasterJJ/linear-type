@@ -5,30 +5,55 @@ open Support.Pervasive
 (* ---------------------------------------------------------------------- *)
 (* Datatypes *)
 
+(* ---- TODO: linear type system ---- *)
+type qualifier =
+  | QLinear
+  | QUnrestricted
+
+type pre_ty =
+  | PBool
+  | PPair of ty * ty
+  | PFunc of ty * ty
+
+and ty =
+  | TyQual of qualifier * pre_ty
+
+type boolean =
+  | BTrue
+  | BFalse
+
+type var =
+  | Var of string
+
 type term =
-    TmTrue of info
-  | TmFalse of info
-  | TmIf of info * term * term * term
-  | TmZero of info
-  | TmSucc of info * term
-  | TmPred of info * term
-  | TmIsZero of info * term
+  | TmVar of var * info
+  | TmBool of qualifier * boolean * info
+  | TmIf of term * term * term * info
+  | TmPair of qualifier * term * term * info
+  | TmSplit of term * var * var * term * info
+  | TmAbs of qualifier * var * ty * term * info
+  | TmApp of term * term * info
+
+type binding =
+  | VarTyBind of var * ty
+
+type context = binding list
 
 type command =
     Import of string
-  | Eval of info * term
+  | Eval of term * info
 
 (* ---------------------------------------------------------------------- *)
 (* Extracting file info *)
 
 let tmInfo t = match t with
-    TmTrue(fi) -> fi
-  | TmFalse(fi) -> fi
-  | TmIf(fi,_,_,_) -> fi
-  | TmZero(fi) -> fi
-  | TmSucc(fi,_) -> fi
-  | TmPred(fi,_) -> fi
-  | TmIsZero(fi,_) -> fi 
+  | TmVar(_,fi) -> fi
+  | TmBool(_,_,fi) -> fi
+  | TmIf(_,_,_,fi) -> fi
+  | TmPair(_,_,_,fi) -> fi
+  | TmSplit(_,_,_,_,fi) -> fi
+  | TmAbs(_,_,_,_,fi) -> fi
+  | TmApp(_,_,fi) -> fi
 
 (* ---------------------------------------------------------------------- *)
 (* Printing *)
@@ -51,42 +76,70 @@ let obox() = open_hvbox 2
 let cbox() = close_box()
 let break() = print_break 0 0
 
-let rec printtm_Term outer t = match t with
-    TmIf(fi, t1, t2, t3) ->
-       obox0();
-       pr "if ";
-       printtm_Term false t1;
-       print_space();
-       pr "then ";
-       printtm_Term false t2;
-       print_space();
-       pr "else ";
-       printtm_Term false t3;
-       cbox()
-  | t -> printtm_AppTerm outer t
+let rec print_tm t =
+  match t with
+  | TmVar(x,_) -> 
+      obox0();  
+      print_var x;
+      cbox()
+  | TmBool(q,b,_) ->
+      obox();
+      print_qual q; pr " "; print_b b;
+      cbox()
+  | TmIf(t,t1,t2,_) ->
+      obox0();
+      pr "if "; print_tm t; pr " then";
+        print_tm t1; break();
+      pr "else";
+        print_tm t2; break();
+      cbox()
+  | TmPair(q,t1,t2,_) ->
+      obox0();
+      print_qual q; pr " <"; print_tm t1;
+      pr ","; print_tm t2; pr ">";
+      cbox()
+  | TmSplit(t1,x,y,t2,_) ->
+      obox0();
+      pr "split "; print_tm t1; pr " as ";
+      print_var x; pr ","; print_var y;
+      pr " in "; print_tm t2;
+      cbox()
+  | TmAbs(q,x,ty,t,_) ->
+      obox0();
+      print_qual q; pr " lambda ";
+      print_var x; pr ":"; print_ty ty;
+      pr "."; print_tm t;
+      cbox()
+  | TmApp(t1,t2,_) ->
+      obox0();
+      print_tm t1; pr " "; print_tm t2;
+      cbox()
 
-and printtm_AppTerm outer t = match t with
-    TmPred(_,t1) ->
-       pr "pred "; printtm_ATerm false t1
-  | TmIsZero(_,t1) ->
-       pr "iszero "; printtm_ATerm false t1
-  | t -> printtm_ATerm outer t
+and print_var = function
+  | Var(x) -> obox0(); pr x; cbox()
 
-and printtm_ATerm outer t = match t with
-    TmTrue(_) -> pr "true"
-  | TmFalse(_) -> pr "false"
-  | TmZero(fi) ->
-       pr "0"
-  | TmSucc(_,t1) ->
-     let rec f n t = match t with
-         TmZero(_) -> pr (string_of_int n)
-       | TmSucc(_,s) -> f (n+1) s
-       | _ -> (pr "(succ "; printtm_ATerm false t1; pr ")")
-     in f 1 t1
-  | t -> pr "("; printtm_Term outer t; pr ")"
+and print_qual = function
+  | QLinear -> obox0(); pr "lin"; cbox()
+  | QUnrestricted -> obox0(); pr "un"; cbox()
 
-let printtm t = printtm_Term true t 
+and print_b = function
+  | BTrue -> obox0(); pr "true"; cbox()
+  | BFalse -> obox0(); pr "false"; cbox()
 
+and print_ty = function
+  | TyQual(q,pt) ->
+      obox0();
+      print_qual q; pr " "; print_prety pt;
+      cbox()
 
-
-
+and print_prety = function
+  | PBool ->
+      obox0(); pr "Bool"; cbox()
+  | PPair(ty1,ty2) ->
+      obox0();
+      print_ty ty1; pr "*"; print_ty ty2;
+      cbox();
+  | PFunc(ty1,ty2) ->
+      obox0();
+      print_ty ty1; pr "->"; print_ty ty2;
+      cbox()

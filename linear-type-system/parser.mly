@@ -28,9 +28,13 @@ open Syntax
 %token <Support.Error.info> ELSE
 %token <Support.Error.info> TRUE
 %token <Support.Error.info> FALSE
-%token <Support.Error.info> SUCC
-%token <Support.Error.info> PRED
-%token <Support.Error.info> ISZERO
+%token <Support.Error.info> LIN
+%token <Support.Error.info> UN
+%token <Support.Error.info> SPLIT
+%token <Support.Error.info> AS
+%token <Support.Error.info> IN
+%token <Support.Error.info> LAMBDA
+%token <Support.Error.info> BOOL
 
 /* Identifier and constant value tokens */
 %token <string Support.Error.withinfo> UCID  /* uppercase-initial */
@@ -105,37 +109,48 @@ toplevel :
 Command :
     IMPORT STRINGV { (Import($2.v)) }
   | Term 
-      { (let t = $1 in Eval(tmInfo t,t)) }
+      { (let t = $1 in Eval(t, tmInfo t)) }
 
 Term :
-    AppTerm
-      { $1 }
+  | LCID
+      { TmVar(Var $1.v, $1.i) }
+  | LIN Boolean
+      { TmBool(QLinear, $2, $1) }
+  | UN Boolean
+      { TmBool(QUnrestricted, $2, $1) }
   | IF Term THEN Term ELSE Term
-      { TmIf($1, $2, $4, $6) }
+      { TmIf($2, $4, $6, $1) }
+  | LIN LT Term COMMA Term GT
+      { TmPair(QLinear, $3, $5, $1) }
+  | UN LT Term COMMA Term GT
+      { TmPair(QUnrestricted, $3, $5, $1) }
+  | SPLIT Term AS LCID COMMA LCID IN Term
+      { TmSplit($2, Var $4.v, Var $6.v, $8, $1) }
+  | LIN LAMBDA LCID COLON Type DOT Term
+      { TmAbs(QLinear, Var $3.v, $5, $7, $1) }
+  | UN LAMBDA LCID COLON Type DOT Term
+      { TmAbs(QUnrestricted, Var $3.v, $5, $7, $1) }
+  | Term Term
+      { TmApp($1, $2, tmInfo $1) }
 
-AppTerm :
-    ATerm
-      { $1 }
-  | SUCC ATerm
-      { TmSucc($1, $2) }
-  | PRED ATerm
-      { TmPred($1, $2) }
-  | ISZERO ATerm
-      { TmIsZero($1, $2) }
-
-/* Atomic terms are ones that never require extra parentheses */
-ATerm :
-    LPAREN Term RPAREN  
-      { $2 } 
-  | TRUE
-      { TmTrue($1) }
+Boolean :
+    TRUE
+      { BTrue }
   | FALSE
-      { TmFalse($1) }
-  | INTV
-      { let rec f n = match n with
-              0 -> TmZero($1.i)
-            | n -> TmSucc($1.i, f (n-1))
-          in f $1.v }
+      { BFalse }
 
+Type :
+    LIN PreType
+      { TyQual(QLinear, $2) }
+  | UN PreType
+      { TyQual(QUnrestricted, $2) }
+
+PreType :
+    BOOL
+      { PBool }
+  | Type STAR Type
+      { PPair($1, $3) }
+  | Type ARROW Type
+      { PFunc($1, $3) }
 
 /*   */

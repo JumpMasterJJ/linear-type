@@ -64,12 +64,12 @@ let rec process_file f  =
     in
       List.iter g  cmds)
 
-and process_command  cmd = match cmd with
+and process_command cmd = match cmd with
     Import(f) -> 
       process_file f 
-  | Eval(fi,t) -> 
+  | Eval(t,fi) -> 
       let t' = eval t in
-      printtm_ATerm true t'; 
+      print_tm t'; 
       force_newline();
       ()
   

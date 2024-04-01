@@ -17,10 +17,14 @@ let reservedWords = [
   ("else", fun i -> Parser.ELSE i);
   ("true", fun i -> Parser.TRUE i);
   ("false", fun i -> Parser.FALSE i);
-  ("succ", fun i -> Parser.SUCC i);
-  ("pred", fun i -> Parser.PRED i);
-  ("iszero", fun i -> Parser.ISZERO i);
-  
+  ("lin", fun i -> Parser.LIN i);
+  ("un", fun i -> Parser.UN i);
+  ("split", fun i -> Parser.SPLIT i);
+  ("as", fun i -> Parser.AS i);
+  ("in", fun i -> Parser.IN i);
+  ("lambda", fun i -> Parser.LAMBDA i);
+  ("Bool", fun i -> Parser.BOOL i);
+
   (* Symbols *)
   ("_", fun i -> Parser.USCORE i);
   ("'", fun i -> Parser.APOSTROPHE i);
