@@ -132,6 +132,8 @@ Term :
       { TmAbs(QUnrestricted, Var $3.v, $5, $7, $1) }
   | Term Term
       { TmApp($1, $2, tmInfo $1) }
+  | LPAREN Term RPAREN
+      { $2 }
 
 Boolean :
     TRUE

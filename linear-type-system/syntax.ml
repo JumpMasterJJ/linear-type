@@ -5,7 +5,7 @@ open Support.Pervasive
 (* ---------------------------------------------------------------------- *)
 (* Datatypes *)
 
-(* ---- TODO: linear type system ---- *)
+(* Syntax *)
 type qualifier =
   | QLinear
   | QUnrestricted
@@ -33,6 +33,45 @@ type term =
   | TmSplit of term * var * var * term * info
   | TmAbs of qualifier * var * ty * term * info
   | TmApp of term * term * info
+
+
+(* Run-time data *)
+type pre_value =
+  | VBool of boolean
+  | VPair of var * var
+  | VAbs of var * term
+
+type value = qualifier * pre_value
+
+type store = (var * value) list
+
+let empty_store : store = []
+
+let add_var s x v : store =
+  (x, v) :: s
+
+let find_var s x : value =
+  let (_, v) = List.find (fun (y,_) -> x = y) s in v
+
+(* TODO: with qualifier *)
+let del_var s x : store =
+  List.filter (fun (y,_) -> x != y) s
+
+(* [x |-> y] *)
+let sub_var s x y : store =
+  let v = find_var s y in
+  let s' = del_var s x in
+  add_var s' x v
+
+let index = ref 0
+
+let noname () = Var ("noname" ^ string_of_int !index)
+
+let add_noname s v =
+  incr index;
+  (noname (), v) :: s
+  
+
 
 type binding =
   | VarTyBind of var * ty
@@ -143,3 +182,29 @@ and print_prety = function
       obox0();
       print_ty ty1; pr "->"; print_ty ty2;
       cbox()
+
+
+let print_pv pv =
+  match pv with
+  | VBool b ->
+      obox0();
+      print_b b;
+      cbox()
+  | VPair(v1,v2) ->
+      obox0();
+      pr "<"; print_var v1; pr ","; print_var v2; pr ">";
+      cbox()
+  | VAbs(x,t) ->
+      obox0();
+      pr "lambda "; print_var x; pr "."; print_tm t;
+      cbox() 
+
+let print_value (q, pv) =
+  obox0();
+  print_qual q; pr " "; print_pv pv;
+  cbox()
+
+let print_store (s:store) =
+  obox0();
+  List.iter (fun (x,v) -> print_var x; pr " |-> "; print_value v; break()) s;
+  cbox()

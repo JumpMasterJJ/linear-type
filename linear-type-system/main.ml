@@ -68,8 +68,8 @@ and process_command cmd = match cmd with
     Import(f) -> 
       process_file f 
   | Eval(t,fi) -> 
-      let t' = eval t in
-      print_tm t'; 
+      let v = eval t in
+      print_value v;
       force_newline();
       ()
   
