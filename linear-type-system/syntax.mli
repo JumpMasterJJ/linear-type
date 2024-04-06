@@ -4,24 +4,15 @@ open Support.Pervasive
 open Support.Error
 
 (* Data type definitions *)
-type qualifier =
-  | QLinear
-  | QUnrestricted
+type qualifier = QLinear | QUnrestricted
 
-type pre_ty =
-  | PBool
-  | PPair of ty * ty
-  | PFunc of ty * ty
+type pre_ty = PBool | PPair of ty * ty | PFunc of ty * ty
 
-and ty =
-  | TyQual of qualifier * pre_ty
+and ty = TyQual of qualifier * pre_ty
 
-type boolean =
-  | BTrue
-  | BFalse
+type boolean = BTrue | BFalse
 
-type var =
-  | Var of string
+type var = Var of string
 
 type term =
   | TmVar of var * info
@@ -33,10 +24,7 @@ type term =
   | TmApp of term * term * info
 
 (* Run-time data *)
-type pre_value =
-  | VBool of boolean
-  | VPair of var * var
-  | VAbs of var * term
+type pre_value = VBool of boolean | VPair of var * var | VAbs of var * term
 
 type value = qualifier * pre_value
 
@@ -58,26 +46,14 @@ val noname : unit -> var
 
 val add_noname : store -> value -> store
 
-
-type binding =
-  | VarTyBind of var * ty
-
-type context = binding list
-
-type command =
-    Import of string
-  | Eval of term * info
-
-
+type command = Import of string | Eval of term * info
 
 (* Printing *)
-val print_tm: term -> unit
+val print_tm : term -> unit
 
-val print_value: value -> unit
+val print_value : value -> unit
 
-val print_store: store -> unit
-
-val print_var: var -> unit
+val print_store : store -> unit
 
 (* Misc *)
-val tmInfo: term -> info
+val tmInfo : term -> info

@@ -68,6 +68,7 @@ and process_command cmd = match cmd with
     Import(f) -> 
       process_file f 
   | Eval(t,fi) -> 
+      let _ = typeof t in
       let v = eval t in
       print_value v;
       force_newline();

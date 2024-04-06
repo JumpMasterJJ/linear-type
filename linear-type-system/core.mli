@@ -7,3 +7,5 @@ open Syntax
 open Support.Error
 
 val eval : term -> value
+
+val typeof : term -> ty

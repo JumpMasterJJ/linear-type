@@ -146,6 +146,8 @@ Type :
       { TyQual(QLinear, $2) }
   | UN PreType
       { TyQual(QUnrestricted, $2) }
+  | LPAREN Type RPAREN
+      { $2 }
 
 PreType :
     BOOL
@@ -154,5 +156,7 @@ PreType :
       { PPair($1, $3) }
   | Type ARROW Type
       { PFunc($1, $3) }
+  | LPAREN PreType RPAREN
+      { $2 }
 
 /*   */
