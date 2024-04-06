@@ -18,9 +18,14 @@ un lambda x:(un Bool).un false;
 /* Wrong Typing */
 /* discard of x */
 lin lambda x:(lin Bool).
+  (lin lambda f:(un (un Bool -> un Bool)). lin true) (un lambda y:un Bool.y);
+lin lambda x:(lin Bool).
   (lin lambda f:(un (un Bool -> lin Bool)). lin true) (un lambda y:un Bool.x);
 
 /* duplicate of x */
+lin lambda x:lin Bool.
+  (lin lambda f:un (lin Bool -> lin Bool). lin <f x,f x>)
+  (un lambda y:lin Bool. y);
 lin lambda x:lin Bool.
   (lin lambda f:un (un Bool -> lin Bool). lin <f (un true),f (un true)>)
   (un lambda y:un Bool. x);
